@@ -8,7 +8,7 @@ T_RequestModel = TypeVar("T_RequestModel", bound=BaseModel)
 T_ResponseModel = TypeVar("T_ResponseModel", bound=BaseModel)
 
 
-class GenericService(Generic[T_RequestModel, T_ResponseModel]):
+class GenericRepository(Generic[T_RequestModel, T_ResponseModel]):
 
     def __init__(self, collection: Collection, requestModelType: T_RequestModel, responseModelType: T_ResponseModel) -> None:
         self.collection = collection
