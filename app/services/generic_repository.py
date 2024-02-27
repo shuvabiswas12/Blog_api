@@ -1,43 +1,37 @@
 from datetime import datetime
-from typing import Generic, List, TypeVar, Union
+from typing import List, Union
 from bson import ObjectId
-from pydantic import BaseModel
 from pymongo.collection import Collection
 
-T_RequestModel = TypeVar("T_RequestModel", bound=BaseModel)
-T_ResponseModel = TypeVar("T_ResponseModel", bound=BaseModel)
 
+class GenericRepository:
 
-class GenericRepository(Generic[T_RequestModel, T_ResponseModel]):
-
-    def __init__(self, collection: Collection, requestModelType: T_RequestModel, responseModelType: T_ResponseModel) -> None:
+    def __init__(self, collection: Collection) -> None:
         self.collection = collection
-        self.T_RequestModel = requestModelType
-        self.T_ResponseModel = responseModelType
 
-    def get(self, id: str) -> Union[T_ResponseModel, None]:
+    def get(self, id: str) -> Union[any, None]:
         result = self.collection.find_one({"_id": ObjectId(id)})
         if result is None:
             return None
         result["id"] = str(result.pop("_id", None))
-        return self.T_ResponseModel.model_validate(result)
+        return result
 
-    def get_all(self) -> List[T_ResponseModel]:
+    def get_all(self) -> List[any]:
         results = self.collection.find()
         parsed_result = []
         for result in results:
             if "_id" in result:
                 result["id"] = str(result.pop("_id", None))
                 parsed_result.append(result)
-        return [self.T_ResponseModel.model_validate(item) for item in parsed_result]
+        return parsed_result
 
-    def create(self, item: T_RequestModel) -> Union[T_ResponseModel, None]:
+    def create(self, item: any) -> Union[any, None]:
         try:
             item_dict = item.model_dump()
             item_dict["created_at"] = datetime.now()
             result = self.collection.insert_one(item_dict)
             item_dict["id"] = str(result.inserted_id)
-            return self.T_ResponseModel.model_validate(item_dict)
+            return item_dict
         except Exception as e:
             print(e)
             return None
@@ -46,7 +40,7 @@ class GenericRepository(Generic[T_RequestModel, T_ResponseModel]):
         result = self.collection.delete_one({"_id": ObjectId(id)})
         return result.deleted_count > 0
 
-    def update(self, id: str, item: T_RequestModel) -> Union[T_ResponseModel, None]:
+    def update(self, id: str, item: any) -> Union[any, None]:
         item_dict = item.model_dump()
         item_dict["updated_at"] = datetime.now()
         self.collection.update_one({"_id": ObjectId(id)}, {"$set": item_dict})
