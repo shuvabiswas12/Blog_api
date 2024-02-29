@@ -37,12 +37,23 @@ async def create_blog(blog: BlogRequestSchema, service: BlogRepository = Depends
 
 
 @blog_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_blog(id: str, service: BlogRepository = Depends(get_blog_service)):
+async def delete_blog(id: str, service: BlogRepository = Depends(get_blog_service), _user: User = Depends(get_user_from_access_token)):
+    blog_to_delete = service.get(id=id)
+
+    if blog_to_delete is None:
+        raise HTTPException(
+            status_code=404, detail="Blog could not be found! Maybe blog has been deleted already.")
+
+    if blog_to_delete.get('user_id') != _user.id:
+        raise HTTPException(
+            status_code=400, detail="Access denied.")
+
     result = service.delete(id=id)
+
     if result:
         return "Done"
     raise HTTPException(
-        status_code=500, detail="Blog could not be found! Maybe blog has been deleted already.")
+        status_code=404, detail="Blog could not be found! Maybe blog has been deleted already.")
 
 
 @blog_router.put("/{id}", status_code=status.HTTP_200_OK, response_model=BlogResponseSchema)
