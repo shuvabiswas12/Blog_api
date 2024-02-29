@@ -1,6 +1,7 @@
 from datetime import datetime
 import time
 from typing import Collection, Union
+from bson import ObjectId
 
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -11,7 +12,7 @@ from passlib.hash import bcrypt
 from app.db import users_collection
 
 # Create a password context for hashing
-password_context = CryptContext(schemes=[bcrypt], deprecated="auto")
+password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 password bearer for authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -19,6 +20,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 # Error types
 InvalidTokenError: str = "Invalid token."
 InvalidEmailOrPasswordError: str = "Invalid email or password."
+UserNotFound: str = "User not found."
 
 
 class UserRepository(GenericRepository):
@@ -73,7 +75,7 @@ class UserRepository(GenericRepository):
     def get_current_user(self, token: str = Depends(oauth2_scheme)) -> dict:
         try:
             payload = jwt.decode(
-                token=token, key=self.SECRET_KEY, algorithm=self.ALGORITHM)
+                token=token, key=self.SECRET_KEY, algorithms=self.ALGORITHM)
             email = payload.get("sub")
 
             if email is None:
@@ -91,6 +93,15 @@ class UserRepository(GenericRepository):
 
         if user is None:
             raise ValueError(InvalidEmailOrPasswordError)
+
+        user["id"] = str(user.pop("_id"))
+        return user
+
+    def get_user_by_id(self, id: str) -> dict:
+        user = users_collection.find_one({"_id": ObjectId(id)})
+
+        if user is None:
+            raise ValueError(UserNotFound)
 
         user["id"] = str(user.pop("_id"))
         return user

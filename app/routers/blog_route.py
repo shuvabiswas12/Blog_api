@@ -1,8 +1,9 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from app.schemas.blog_schema import BlogRequestSchema, BlogResponseSchema
-from app.dependencies import get_blog_service
+from app.dependencies import get_blog_service, get_user_service
 from app.services.blog_repository import BlogRepository
+from app.services.user_repository import UserRepository
 
 blog_router = APIRouter(prefix="/blogs", tags=["blog"])
 
@@ -21,8 +22,15 @@ async def get_blog(id: str, service: BlogRepository = Depends(get_blog_service))
 
 
 @blog_router.post("", status_code=status.HTTP_201_CREATED, response_model=BlogResponseSchema)
-async def create_blog(blog: BlogRequestSchema, service: BlogRepository = Depends(get_blog_service)):
-    result = service.create(item=blog)
+async def create_blog(blog: BlogRequestSchema, service: BlogRepository = Depends(get_blog_service), user_service: UserRepository = Depends(get_user_service), access_token: str = Header()):
+    blog_dict = blog.model_dump()
+    try:
+        _user = user_service.get_current_user(token=access_token)
+        blog_dict["user_id"] = str(_user.get("id"))
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=f"{e}")
+
+    result = service.create(item=blog_dict)
     if result is None:
         raise HTTPException(
             status_code=500, detail="Blog could not be created!")
