@@ -1,10 +1,9 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.blog_schema import BlogRequestSchema, BlogResponseSchema
-from app.dependencies import get_blog_service, get_user_from_access_token, get_user_service
+from app.dependencies import get_blog_service, get_user_from_access_token
 from app.schemas.user_schema import User
 from app.services.blog_repository import BlogRepository
-from app.services.user_repository import UserRepository
 
 blog_router = APIRouter(prefix="/blogs", tags=["blog"])
 
@@ -57,8 +56,19 @@ async def delete_blog(id: str, service: BlogRepository = Depends(get_blog_servic
 
 
 @blog_router.put("/{id}", status_code=status.HTTP_200_OK, response_model=BlogResponseSchema)
-async def update_blog(id: str, item: BlogRequestSchema, service: BlogRepository = Depends(get_blog_service)):
+async def update_blog(id: str, item: BlogRequestSchema, service: BlogRepository = Depends(get_blog_service), _user: User = Depends(get_user_from_access_token)):
+    blog_to_update = service.get(id=id)
+
+    if blog_to_update is None:
+        raise HTTPException(
+            status_code=404, detail="Blog could not be found!")
+
+    if blog_to_update.get('user_id') != _user.id:
+        raise HTTPException(
+            status_code=400, detail="Access denied.")
+
     result = service.update(id=id, item=item)
+
     if result is None:
         raise HTTPException(
             status_code=500, detail="Blog could not be updated!")
