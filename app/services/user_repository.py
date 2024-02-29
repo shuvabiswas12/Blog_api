@@ -33,7 +33,7 @@ class UserRepository(GenericRepository):
     def __hash_password(self, password: str) -> str:
         return password_context.hash(password)
 
-    def create(self, item: any) -> Union[any, bool, None]:
+    def create(self, item: any) -> Union[dict, bool, None]:
         # Item to as dict conversion
         item_dict = item.model_dump()
         existing_user = users_collection.find_one(

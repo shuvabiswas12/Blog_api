@@ -9,7 +9,7 @@ class BlogRepository(GenericRepository):
     def __init__(self, collection: Collection) -> None:
         super().__init__(collection)
 
-    def create(self, item: any) -> Any | None:
+    def create(self, item: any) -> dict | None:
         try:
             item["created_at"] = datetime.now()
             result = self.collection.insert_one(item)

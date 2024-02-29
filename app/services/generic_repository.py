@@ -9,14 +9,14 @@ class GenericRepository:
     def __init__(self, collection: Collection) -> None:
         self.collection = collection
 
-    def get(self, id: str) -> Union[any, None]:
+    def get(self, id: str) -> Union[dict, None]:
         result = self.collection.find_one({"_id": ObjectId(id)})
         if result is None:
             return None
         result["id"] = str(result.pop("_id", None))
         return result
 
-    def get_all(self) -> List[any]:
+    def get_all(self) -> List[dict]:
         results = self.collection.find()
         parsed_result = []
         for result in results:
@@ -25,7 +25,7 @@ class GenericRepository:
                 parsed_result.append(result)
         return parsed_result
 
-    def create(self, item: any) -> Union[any, None]:
+    def create(self, item: any) -> Union[dict, None]:
         try:
             item_dict = item.model_dump()
             item_dict["created_at"] = datetime.now()
@@ -40,7 +40,7 @@ class GenericRepository:
         result = self.collection.delete_one({"_id": ObjectId(id)})
         return result.deleted_count > 0
 
-    def update(self, id: str, item: any) -> Union[any, None]:
+    def update(self, id: str, item: any) -> Union[dict, None]:
         item_dict = item.model_dump()
         item_dict["updated_at"] = datetime.now()
         self.collection.update_one({"_id": ObjectId(id)}, {"$set": item_dict})
