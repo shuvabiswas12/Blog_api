@@ -82,6 +82,7 @@ class UserRepository(GenericRepository):
                 raise ValueError(InvalidTokenError)
 
             user = self.get_user_by_email(email=email)
+            user.pop("password")  # remove password from response
 
             return user
 
