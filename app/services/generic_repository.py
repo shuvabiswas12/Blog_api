@@ -16,8 +16,8 @@ class GenericRepository:
         result["id"] = str(result.pop("_id", None))
         return result
 
-    def get_all(self) -> List[dict]:
-        results = self.collection.find()
+    def get_all(self, **kwargs) -> List[dict]:
+        results = self.collection.find(kwargs)
         parsed_result = []
         for result in results:
             if "_id" in result:
