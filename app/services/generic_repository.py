@@ -9,8 +9,15 @@ class GenericRepository:
     def __init__(self, collection: Collection) -> None:
         self.collection = collection
 
-    def get(self, id: str) -> Union[dict, None]:
-        result = self.collection.find_one({"_id": ObjectId(id)})
+    def get(self, id: str = None, **kwargs) -> Union[dict, None]:
+        query_dict = dict()
+
+        if id is not None:
+            query_dict = {"_id": ObjectId(id)}
+        elif len(kwargs):
+            query_dict = kwargs
+
+        result = self.collection.find_one(query_dict)
         if result is None:
             return None
         result["id"] = str(result.pop("_id", None))
