@@ -24,3 +24,12 @@ async def get_likes(user_id: str = Depends(get_validated_userId_from_query), blo
 
     if blog_id:
         return like_service.get_all(blog_id=blog_id)
+
+
+@like_router.post("/{blog_id}", status_code=status.HTTP_200_OK)
+async def do_like_or_unlike(blog_id: str = Depends(get_validated_blogId_from_query), like_service: LikeRepository = Depends(get_like_service), _user: User = Depends(get_user_from_access_token)):
+    likes_count = like_service.get(user_id=_user.id, blog_id=blog_id)
+    if likes_count is None:
+        like_service.create(Like(blog_id=blog_id, user_id=_user.id))
+        return True
+    return like_service.delete(id=likes_count.get("id"))
