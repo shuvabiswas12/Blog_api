@@ -13,6 +13,7 @@ DB = CLIENT.get_database("fastapi__blog_api")
 blogs_collection = DB.get_collection("blogs")
 users_collection = DB.get_collection("users")
 likes_collection = DB.get_collection("likes")
+comments_collection = DB.get_collection("comments")
 
 # send a ping to confirm a successful connection
 try:

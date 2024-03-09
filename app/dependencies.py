@@ -1,9 +1,10 @@
 from fastapi import Depends, HTTPException, Header
 from app.schemas.user_schema import User
 from app.services.blog_repository import BlogRepository
+from app.services.comment_respository import CommentRepository
 from app.services.like_repository import LikeRepository
 from app.services.user_repository import UserRepository
-from app.db import users_collection, likes_collection, blogs_collection
+from app.db import users_collection, likes_collection, blogs_collection, comments_collection
 
 
 def get_blog_service():
@@ -16,6 +17,10 @@ def get_user_service():
 
 def get_like_service():
     return LikeRepository(collection=likes_collection)
+
+
+def get_comment_service():
+    return CommentRepository(collection=comments_collection)
 
 
 async def get_user_from_access_token(user_service: UserRepository = Depends(get_user_service), access_token: str = Header()) -> User:
