@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.blog_schema import BlogRequestSchema, BlogResponseSchema
-from app.dependencies import get_blog_service, get_user_from_access_token
+from app.dependencies import get_blog_service, get_user_from_access_token, validate_objectId
 from app.schemas.user_schema import User
 from app.services.blog_repository import BlogRepository
 
@@ -14,7 +14,7 @@ async def get_blogs(service: BlogRepository = Depends(get_blog_service)):
 
 
 @blog_router.get("/{id}", status_code=status.HTTP_200_OK, response_model=BlogResponseSchema)
-async def get_blog(id: str, service: BlogRepository = Depends(get_blog_service)):
+async def get_blog(id: str = Depends(validate_objectId), service: BlogRepository = Depends(get_blog_service)):
     result = service.get(id=id)
     if result is None:
         raise HTTPException(status_code=404, detail="Not Found!")
@@ -36,7 +36,7 @@ async def create_blog(blog: BlogRequestSchema, service: BlogRepository = Depends
 
 
 @blog_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_blog(id: str, service: BlogRepository = Depends(get_blog_service), _user: User = Depends(get_user_from_access_token)):
+async def delete_blog(id: str = Depends(validate_objectId), service: BlogRepository = Depends(get_blog_service), _user: User = Depends(get_user_from_access_token)):
     blog_to_delete = service.get(id=id)
 
     if blog_to_delete is None:
@@ -56,7 +56,7 @@ async def delete_blog(id: str, service: BlogRepository = Depends(get_blog_servic
 
 
 @blog_router.put("/{id}", status_code=status.HTTP_200_OK, response_model=BlogResponseSchema)
-async def update_blog(id: str, item: BlogRequestSchema, service: BlogRepository = Depends(get_blog_service), _user: User = Depends(get_user_from_access_token)):
+async def update_blog(item: BlogRequestSchema, id: str = Depends(validate_objectId), service: BlogRepository = Depends(get_blog_service), _user: User = Depends(get_user_from_access_token)):
     blog_to_update = service.get(id=id)
 
     if blog_to_update is None:
